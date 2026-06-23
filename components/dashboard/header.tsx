@@ -1,21 +1,40 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Menu } from "lucide-react"
 import { UserButton, useUser } from "@clerk/nextjs"
+import { usePathname } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
+import { Sidebar } from "./sidebar"
 
 export function Header() {
   const { isLoaded, isSignedIn, user } = useUser()
+  const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOpen(false)
+  }, [pathname])
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b glass px-6 z-10 sticky top-0">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b glass px-6 z-10 sticky top-0 bg-background/80 backdrop-blur-md">
       <div className="flex items-center">
-        <Button variant="ghost" size="icon" className="md:hidden mr-2 rounded-full hover:bg-muted/80">
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
-        </Button>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger render={
+            <Button variant="ghost" size="icon" className="md:hidden mr-2 rounded-full hover:bg-muted/80">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          } />
+          <SheetContent side="left" className="p-0 w-64 border-r-0">
+            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            <Sidebar />
+          </SheetContent>
+        </Sheet>
         <h2 className="text-lg font-bold tracking-tight md:hidden text-gradient">AI Resume</h2>
       </div>
       <div className="flex items-center gap-4">
