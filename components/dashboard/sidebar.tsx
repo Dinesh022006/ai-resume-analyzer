@@ -4,6 +4,16 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { LayoutDashboard, Upload, History, Settings, FileText, Zap } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 import { cn } from "@/lib/utils"
 
@@ -68,9 +78,40 @@ export function Sidebar() {
           <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
             You have unlimited access to AI analysis and ATS scoring.
           </p>
-          <Link href="/dashboard/settings" className="mt-4 inline-flex text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wide">
-            Manage Plan &rarr;
-          </Link>
+          <Dialog>
+            <DialogTrigger render={
+              <button className="mt-4 inline-flex text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wide bg-transparent border-none p-0 cursor-pointer">
+                Manage Plan &rarr;
+              </button>
+            } />
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <div className="flex items-center gap-2">
+                  <DialogTitle className="text-xl">Premium Plans</DialogTitle>
+                  <span className="bg-primary/20 text-primary text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full">Coming Soon</span>
+                </div>
+                <DialogDescription className="pt-2 text-base">
+                  Premium subscriptions will be available in a future update.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <h4 className="text-sm font-semibold text-foreground">Planned Premium Features:</h4>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Unlimited Resume Analyses</li>
+                  <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />AI Cover Letter Generator</li>
+                  <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Multiple Resume Versions</li>
+                  <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Resume Comparison</li>
+                  <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Advanced ATS Insights</li>
+                  <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Priority AI Processing</li>
+                  <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Job Application Tracker (Coming Soon)</li>
+                </ul>
+              </div>
+              <DialogFooter className="sm:justify-between mt-2">
+                <DialogTrigger render={<Button variant="outline">Close</Button>} />
+                <Button disabled>Coming Soon</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

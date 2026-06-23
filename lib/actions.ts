@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "./prisma";
 import { Prisma } from "@prisma/client";
 import { AnalysisResult } from "./ai-schema";
@@ -162,4 +162,23 @@ export async function deleteAnalysis(id: string) {
 
   revalidatePath("/dashboard/history");
   revalidatePath("/dashboard");
+}
+
+export async function deleteUserAccount() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  // 1. Delete all resumes associated with this user (cascades to analyses)
+  await prisma.resume.deleteMany({
+    where: { userId },
+  });
+
+  // 2. Delete the user from Clerk
+  const client = await clerkClient();
+  await client.users.deleteUser(userId);
+
+  return { success: true };
 }
