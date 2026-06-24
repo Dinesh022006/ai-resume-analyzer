@@ -104,8 +104,8 @@ export default function UploadPage() {
       const aiResult = await analyzeResume(parseResult.text, jobDescription);
       
       if (!aiResult.success || !aiResult.data) {
-        toast.error("Analysis Failed", { id: toastId, description: aiResult.error || "Unknown error occurred." });
-        setIsAnalyzing(false);
+        toast.dismiss(toastId);
+        toast.error("Analysis Failed", { description: aiResult.error || "Unknown error occurred." });
         return;
       }
 
@@ -121,7 +121,8 @@ export default function UploadPage() {
         jobDescription
       );
       
-      toast.success("Analysis Complete!", { id: toastId });
+      toast.dismiss(toastId);
+      toast.success("Analysis Complete!");
       
       // Navigate to specific analysis page
       router.push(`/dashboard/analysis/${analysisId}`);
@@ -136,7 +137,9 @@ export default function UploadPage() {
         errorMessage = "The AI service is currently experiencing high demand. Please try again in a few minutes.";
       }
       
-      toast.error("Analysis Error", { id: toastId, description: errorMessage });
+      toast.dismiss(toastId);
+      toast.error("Analysis Error", { description: errorMessage });
+    } finally {
       setIsAnalyzing(false);
     }
   };
