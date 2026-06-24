@@ -125,9 +125,18 @@ export default function UploadPage() {
       
       // Navigate to specific analysis page
       router.push(`/dashboard/analysis/${analysisId}`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error("Analysis Error", { id: toastId, description: "A network error occurred." });
+      let errorMessage = "An unexpected error occurred while generating the analysis.";
+      const errString = String(error) || "";
+      
+      if (errString.includes("429") || errString.includes("RESOURCE_EXHAUSTED") || errString.includes("quota") || errString.includes("Too Many Requests")) {
+        errorMessage = "AI analysis is temporarily unavailable because the Gemini API quota has been exceeded. Please try again later.";
+      } else if (errString.includes("503") || errString.includes("UNAVAILABLE") || errString.includes("Service Unavailable")) {
+        errorMessage = "The AI service is currently experiencing high demand. Please try again in a few minutes.";
+      }
+      
+      toast.error("Analysis Error", { id: toastId, description: errorMessage });
       setIsAnalyzing(false);
     }
   };

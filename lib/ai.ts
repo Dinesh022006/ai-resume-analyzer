@@ -102,8 +102,20 @@ ${resumeText}`;
       return { success: false, error: "AI returned invalid JSON data." };
     }
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Gemini API Error:", error);
-    return { success: false, error: "Network or API failure during AI analysis." };
+    
+    let errorMessage = "An unexpected error occurred while generating the analysis.";
+    const errString = String(error) || "";
+    const err = error as Record<string, unknown>;
+    const status = err?.status || (err?.response as Record<string, unknown>)?.status;
+    
+    if (status === 429 || errString.includes("429") || errString.includes("RESOURCE_EXHAUSTED") || errString.includes("quota") || errString.includes("Too Many Requests")) {
+      errorMessage = "AI analysis is temporarily unavailable because the Gemini API quota has been exceeded. Please try again later.";
+    } else if (status === 503 || errString.includes("503") || errString.includes("UNAVAILABLE") || errString.includes("Service Unavailable")) {
+      errorMessage = "The AI service is currently experiencing high demand. Please try again in a few minutes.";
+    }
+
+    return { success: false, error: errorMessage };
   }
 }
