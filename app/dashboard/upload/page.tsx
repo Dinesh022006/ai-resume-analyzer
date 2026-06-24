@@ -157,16 +157,17 @@ export default function UploadPage() {
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           <div className="space-y-3">
-            <Label htmlFor="jobTitle" className="font-semibold text-foreground/90">Job Title</Label>
-            <Input id="jobTitle" placeholder="e.g. Senior Frontend Developer" className="rounded-xl h-11 bg-background" />
+            <Label htmlFor="jobTitle" className="font-semibold text-foreground/90">Job Title (Optional)</Label>
+            <Input id="jobTitle" placeholder="e.g. Frontend Developer" className="rounded-xl h-11 bg-background" />
           </div>
           <div className="space-y-3">
             <Label htmlFor="jobDesc" className="font-semibold text-foreground/90">Job Description (Optional)</Label>
             <textarea 
               id="jobDesc" 
               className="flex min-h-[120px] w-full rounded-xl border border-input bg-background px-4 py-3 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-shadow"
-              placeholder="Paste the job description here for hyper-tailored ATS keyword scoring..."
+              placeholder="Paste the job description here to receive a role-specific ATS match score and personalized recommendations."
             />
+            <p className="text-sm text-muted-foreground">Leave blank to receive a general ATS analysis. Add a job description to receive a Job Match Score and personalized AI recommendations.</p>
           </div>
         </CardContent>
       </Card>
