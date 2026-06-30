@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { parseResume, ParseResult } from "@/lib/parser";
 import { analyzeResume } from "@/lib/ai";
-import { saveAnalysis } from "@/lib/actions";
+import { saveAnalysis, checkCache } from "@/lib/actions";
 
 export default function UploadPage() {
   const router = useRouter();
@@ -90,7 +90,7 @@ export default function UploadPage() {
     }
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (forceReanalyze: boolean = false) => {
     if (!parseResult?.text) return;
     
     // Get the job description from the textarea if it exists
@@ -101,6 +101,15 @@ export default function UploadPage() {
     const toastId = toast.loading("AI is analyzing your resume...");
 
     try {
+      const { analysisId: cachedId, fingerprint } = await checkCache(parseResult.text, jobDescription);
+      
+      if (!forceReanalyze && cachedId) {
+        toast.dismiss(toastId);
+        toast.success("Loaded a previously generated analysis.");
+        router.push(`/dashboard/analysis/${cachedId}`);
+        return;
+      }
+
       const aiResult = await analyzeResume(parseResult.text, jobDescription);
       
       if (!aiResult.success || !aiResult.data) {
@@ -118,7 +127,9 @@ export default function UploadPage() {
         parseResult.fileName || "resume.pdf",
         jobTitle,
         aiResult.data,
-        jobDescription
+        jobDescription,
+        fingerprint,
+        forceReanalyze
       );
       
       toast.dismiss(toastId);
@@ -303,9 +314,17 @@ export default function UploadPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-end border-t border-border/50 bg-muted/10 px-6 py-5">
+          <CardFooter className="flex justify-end gap-3 border-t border-border/50 bg-muted/10 px-6 py-5">
             <Button 
-              onClick={handleAnalyze} 
+              variant="outline"
+              onClick={() => handleAnalyze(true)} 
+              disabled={isAnalyzing}
+              className="rounded-full h-11 px-6 shadow-sm transition-all hover:bg-muted/50"
+            >
+              Re-analyze with AI
+            </Button>
+            <Button 
+              onClick={() => handleAnalyze(false)} 
               disabled={isAnalyzing}
               className="rounded-full h-11 px-8 shadow-md hover:shadow-lg transition-all group"
             >

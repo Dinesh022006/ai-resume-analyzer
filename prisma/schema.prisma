@@ -37,6 +37,7 @@ model Analysis {
   recommendedJobRoles    Json
   jobDescription         String?
   jobMatchScore          Int?
+  fingerprint            String?  @unique
   createdAt              DateTime @default(now())
   resume                 Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 

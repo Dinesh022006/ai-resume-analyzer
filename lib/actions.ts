@@ -4,6 +4,8 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "./prisma";
 import { Prisma } from "@prisma/client";
 import { AnalysisResult } from "./ai-schema";
+import { CURRENT_AI_MODEL } from "./constants";
+import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 
 export async function saveAnalysis(
@@ -11,12 +13,29 @@ export async function saveAnalysis(
   fileName: string,
   title: string,
   analysisData: AnalysisResult,
-  jobDescription?: string
+  jobDescription?: string,
+  fingerprint?: string,
+  forceReanalyze?: boolean
 ) {
   const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");
+  }
+
+  // If forceReanalyze is true and we have a fingerprint, check if it exists and delete it first
+  if (forceReanalyze && fingerprint) {
+    const existingAnalysis = await prisma.analysis.findUnique({
+      where: { fingerprint },
+      include: { resume: true }
+    });
+    
+    if (existingAnalysis && existingAnalysis.resume.userId === userId) {
+      // Delete the old resume, which will cascade delete the old analysis
+      await prisma.resume.delete({
+        where: { id: existingAnalysis.resume.id }
+      });
+    }
   }
 
   // 1. Create the Resume record
@@ -47,15 +66,48 @@ export async function saveAnalysis(
       recommendedJobRoles: analysisData.recommendedJobRoles || [],
       jobDescription: jobDescription || null,
       jobMatchScore: analysisData.jobMatchScore || null,
-      // If we want to store missingKeywords from JD, we can just merge them into the missingTechnicalSkills or keep them separate. 
-      // The schema already has missingTechnicalSkills as Json. The user asked for "missingKeywords (JSON)".
-      // Let's store them in missingTechnicalSkills for now or add them separately if needed.
+      fingerprint: fingerprint || null,
     },
   });
 
   revalidatePath("/dashboard/history");
   
   return analysis.id;
+}
+
+function normalizeText(text: string) {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/\r\n/g, "\n")
+    .replace(/\s+/g, " ");
+}
+
+export async function checkCache(resumeText: string, jobDescription?: string) {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const normalizedResume = normalizeText(resumeText);
+  const normalizedJD = jobDescription ? normalizeText(jobDescription) : "";
+
+  const hashContent = `${userId}|${normalizedResume}|${normalizedJD}|${CURRENT_AI_MODEL}`;
+  const fingerprint = crypto.createHash("sha256").update(hashContent).digest("hex");
+
+  const existingAnalysis = await prisma.analysis.findUnique({
+    where: { fingerprint }
+  });
+
+  if (existingAnalysis) {
+    const resume = await prisma.resume.findUnique({ where: { id: existingAnalysis.resumeId } });
+    if (resume && resume.userId === userId) {
+      return { analysisId: existingAnalysis.id, fingerprint };
+    }
+  }
+
+  return { analysisId: null, fingerprint };
 }
 
 export async function getAnalysisById(id: string) {
